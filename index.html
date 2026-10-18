@@ -148,7 +148,7 @@ document.getElementById("dl").onclick=function(){
   out.src=url;out.style.display="block";
   cv.toBlob(async function(b){
     var d=null;try{d=await claude.use("downloads")}catch(e){}
-    if(!d){msg.textContent="Unduh otomatis tidak tersedia. Klik kanan / tekan lama gambar di bawah, lalu simpan dengan nama: "+fn;return}
+    if(!d){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=fn;document.body.appendChild(a);a.click();a.remove();msg.textContent="Mengunduh: "+fn+". Kalau tidak turun, klik kanan / tekan lama gambar di bawah, lalu simpan dengan nama itu.";return}
     try{await d.save({filename:fn,data:b});msg.textContent="Tersimpan: "+fn}
     catch(e){msg.textContent=(e&&e.code==="declined")?"Unduhan dibatalkan.":"Gagal ("+((e&&e.code)||"error")+"). Simpan manual dari gambar di bawah dengan nama: "+fn}
   },"image/jpeg",0.95);
