@@ -56,6 +56,7 @@ JUMAT	07/08/2026	MATEMATIKA"></textarea>
 <canvas id="cv" width="800" height="1190"></canvas>
 <button class="dl" id="dl">Unduh JPG</button>
 <div class="msg" id="msg"></div>
+<img id="out" alt="Hasil kartu" style="display:none;width:100%;margin-top:10px;border-radius:8px">
 </div>
 </div>
 <script>
@@ -138,18 +139,18 @@ function fillKelas(){var s=fillSel("kelas",0,0,"Pilih kelas"),has=false;KELAS.fo
 document.getElementById("nama").onchange=function(e){S.nama=e.target.value;draw()};
 document.getElementById("kelas").onchange=function(e){S.kelas=e.target.value;draw()};
 var msg=document.getElementById("msg");
-document.getElementById("dl").onclick=async function(){
-  var dls=null;try{dls=await claude.use("downloads")}catch(e){}
-  if(!dls){msg.textContent="Unduh otomatis tidak tersedia di sini. Tekan lama gambar kartu lalu simpan.";return}
+var BLN=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+function fname(){var mx="";S.rows.slice(0,S.jml).forEach(function(r){if(r.tgl&&r.tgl>mx)mx=r.tgl});var n=(S.nama||"Kartu").replace(/[\\\/:*?"<>|]+/g,"").trim()||"Kartu";return n+(mx?" "+BLN[+mx.slice(5,7)-1]+" "+mx.slice(0,4):"")+".jpg"}
+document.getElementById("dl").onclick=function(){
+  var fn=fname(),out=document.getElementById("out"),url=cv.toDataURL("image/jpeg",0.95);
+  out.src=url;out.style.display="block";
   cv.toBlob(async function(b){
-    var nm=(S.nama||"kartu").replace(/[^\w\- ]+/g,"").trim()||"kartu";
-    try{await dls.save({filename:"kartu-les-"+(S.tipe==="priv"?"private":"kelompok")+"-"+nm+".jpg",data:b});msg.textContent="Tersimpan."}
-    catch(e){msg.textContent=e&&e.code==="declined"?"Unduhan dibatalkan.":"Gagal mengunduh."}
+    var d=null;try{d=await claude.use("downloads")}catch(e){}
+    if(!d){msg.textContent="Unduh otomatis tidak tersedia. Klik kanan / tekan lama gambar di bawah, lalu simpan dengan nama: "+fn;return}
+    try{await d.save({filename:fn,data:b});msg.textContent="Tersimpan: "+fn}
+    catch(e){msg.textContent=(e&&e.code==="declined")?"Unduhan dibatalkan.":"Gagal ("+((e&&e.code)||"error")+"). Simpan manual dari gambar di bawah dengan nama: "+fn}
   },"image/jpeg",0.95);
 };
-
-function nd(v){if(v==null||v==="")return"";if(typeof v==="number")return new Date(Math.round((v-25569)*864e5)).toISOString().slice(0,10);v=String(v).trim();var m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return m[1]+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[3]).slice(-2);m=v.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);if(m){var y=m[3].length==2?"20"+m[3]:m[3];return y+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[1]).slice(-2)}return""}
-function setSeg(id,v){document.querySelectorAll("#"+id+" button").forEach(function(b){b.classList.toggle("on",b.dataset.v==String(v))})}
 document.getElementById("bgo").onclick=function(){
   var bm=document.getElementById("bmsg"),L=document.getElementById("bulk").value.split(/\r?\n/),out=[],bad=0;
   L.forEach(function(ln){if(!ln.trim())return;var c=ln.indexOf("\t")>=0?ln.split("\t"):ln.trim().split(/\s{2,}|;/);
